@@ -1,8 +1,8 @@
-import React from 'react';
+import Survey from './survey';
 
-function HomePage () {
+function HomePage() {
     return (
-        <h1>HomePage</h1>
+        <Survey />
     )
 }
 
