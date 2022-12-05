@@ -64,7 +64,6 @@ function Survey() {
                             type="text"
                             multiline
                             rows={5}
-                            rowsMax={5}
                             fullWidth
                         />
                     </Grid>
