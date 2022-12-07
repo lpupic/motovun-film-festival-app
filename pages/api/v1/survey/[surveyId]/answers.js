@@ -58,21 +58,20 @@ function handler(req, res) {
         }
 
         res.status(201).json({
-            "data": {
-                "type": "surveyAnswers",
-                "id": uuidv4(),
-                "attributes": {
-                    "answers": answers
-                },
-                "relationships": {
-                    "survey": {
-                        "data": {
-                            "type": "surveys",
-                            "id": surveyId
-                        }
+            "type": "surveyAnswers",
+            "id": uuidv4(),
+            "attributes": {
+                "answers": answers
+            },
+            "relationships": {
+                "survey": {
+                    "data": {
+                        "type": "surveys",
+                        "id": surveyId
                     }
                 }
             }
+
         })
     }
 }
