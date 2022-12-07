@@ -1,4 +1,4 @@
-import Survey from './survey';
+import Survey from './survey/index.js';
 
 function HomePage() {
     return (
