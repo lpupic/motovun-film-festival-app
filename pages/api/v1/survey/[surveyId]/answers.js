@@ -1,29 +1,74 @@
+import {v4 as uuidv4} from 'uuid';
+
 function handler(req, res) {
     const surveyId = req.query.surveyId;
 
+    const validateFilm = (value) => {
+        if (!value || value.trim() === '') {
+            return false;
+        }
+        return true;
+    }
+
+    const validateReview = (value) => {
+        if (!value || isNaN(value)) {
+            return false;
+        }
+        return true;
+    }
+
     if (req.method === 'POST') {
-        //add server side validation
+        // simple server side validation
+        const { answers } = req.body.attributes;
+        let errors = [];
+
+        if (!answers && !Array.isArray(answers)) {
+            //return 406 or other method;
+        }
+
+        answers.forEach(elem => {
+            const { questionId, answer } = elem;
+            switch (questionId) {
+                case 'film':
+                    const isValidFilm = validateFilm(answer);
+                    if (!isValidFilm) {
+                        errors.push({
+                            source: { pointer: `data/attributes/answers/film` },
+                            detail: "The value is required"
+                        })
+                    }
+                    break
+                case 'review':
+                    const isValidReview = validateReview(answer);
+                    if (!isValidReview) {
+                        errors.push({
+                            source: { pointer: `data/attributes/answers/review` },
+                            detail: "The value is required"
+                        })
+                    }
+                    break
+                default:
+                    break
+            }
+        });
+        
+        if (errors.length > 0) {
+            res.status(422).json({ "errors": errors });
+            return;
+        }
+
         res.status(201).json({
             "data": {
                 "type": "surveyAnswers",
-                "id": "9c7160a4-e9ad-499e-92f6-07d7cdb0382c",
+                "id": uuidv4(),
                 "attributes": {
-                    "answers": [
-                        {
-                            "questionId": "film",
-                            "answer": "Rocky Horror Picture Show"
-                        },
-                        {
-                            "questionId": "review",
-                            "answer": 5
-                        }
-                    ]
+                    "answers": answers
                 },
                 "relationships": {
                     "survey": {
                         "data": {
                             "type": "surveys",
-                            "id": "2660dd24-e2db-42c1-8093-284b1df2664c"
+                            "id": surveyId
                         }
                     }
                 }

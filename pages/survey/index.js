@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
-import { Grid, Button, Typography } from '@mui/material';
+import { Grid, Button, Typography, List, ListItem, ListItemText } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import Question from './question';
 
@@ -9,7 +9,7 @@ import Question from './question';
 function Survey() {
     const methods = useForm();
     const router = useRouter();
-    const [data, setData] = useState();
+    const [surveyData, setSurveyData] = useState();
     const [errors, setErrors] = useState();
 
     const onSubmit = async (values) => {
@@ -20,44 +20,71 @@ function Survey() {
             }
         ))
 
-        const response = await fetch(`/api/v1/survey/${data.id}/answers`, {
+        const payload = {
+            type: "surveyAnswers",
+            attributes: { answers }
+        }
+
+        const response = await fetch(`/api/v1/survey/${surveyData.id}/answers`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(answers)
+            body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-            router.push('/preview')
+        const data = await response.json();
+        if (!response.ok) {
+            data.errors.forEach(elem => {
+                const name = elem.source.pointer.split('/').pop();
+                methods.setError(name, { type: 'serverValidation', message: elem.detail })
+            });
+            return
         }
-    }
-
-    const fetchSurveyData = async () => {
-        try {
-            const response = await fetch('/api/v1/survey');
-            const data = await response.json();
-            if (!response.ok) {
-                throw data.errors
-            }
-            setData(data)
-        } catch (error) {
-            setErrors(error)
-        }
+        router.push('/preview')
     }
 
     useEffect(() => {
+        const fetchSurveyData = async () => {
+            try {
+                const response = await fetch('/api/v1/survey');
+                const data = await response.json();
+                if (!response.ok) {
+                    throw data.errors
+                }
+                setSurveyData(data)
+            } catch (error) {
+                setErrors(error)
+            }
+        }
+
         fetchSurveyData();
     }, [])
 
-    if (!data && !errors) {
+    if (!surveyData && !errors) {
         return <span>Loading...</span>
     }
 
     if (errors && Array.isArray(errors)) {
-        return <Fragment>
-            {errors.map((err, index) => <span key={index}>Error: {err.detail}</span>)}
-        </Fragment>
+        return <Container fixed>
+            <Grid container alignItems="center" spacing={2}>
+                <Grid item xs={12} md={6}>
+                    <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+                        Errors
+                    </Typography>
+                    <List>
+                        {errors.map((err, index) => (
+                            <ListItem key={index}>
+                                <ListItemText
+                                    primary={err.title}
+                                    secondary={err.detail}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Grid>
+            </Grid>
+        </Container>
     }
 
     return (
@@ -78,7 +105,7 @@ function Survey() {
             <FormProvider {...methods}>
                 <form onSubmit={methods.handleSubmit(onSubmit)}>
                     <Grid container justify="center" direction="column" spacing={4}>
-                        {data.attributes?.questions?.map(q => (
+                        {surveyData.attributes?.questions?.map(q => (
                             <Grid item key={q.questionId}>
                                 <Question options={q} />
                             </Grid>
@@ -89,7 +116,6 @@ function Survey() {
                     </Grid>
                 </form>
             </FormProvider>
-
         </Container>
     );
 }

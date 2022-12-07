@@ -4,7 +4,7 @@ import { Controller, useFormContext } from "react-hook-form";
 
 const Question = (props) => {
     const { questionId, questionType, attributes, label } = props.options;
-    const { register, setValue, control, formState: { errors } } = useFormContext();
+    const { register, control, formState: { errors } } = useFormContext();
     const isError = Boolean(errors?.[questionId]?.type)
 
     if (!props.options) {
@@ -15,9 +15,7 @@ const Question = (props) => {
         return (
             <Box>
                 <TextField
-                    {...register(questionId, {
-                        required: "The field is required"
-                    })}
+                    {...register(questionId, { required: "The field is required" })}
                     name={questionId}
                     label={label}
                     type='text'
