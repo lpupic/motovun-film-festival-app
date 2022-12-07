@@ -1,33 +1,53 @@
-import { Grid, Rating, TextField, Typography } from "@mui/material"
+import { Rating, TextField, Typography } from "@mui/material"
+import { Box } from "@mui/system";
+import { Controller, useFormContext } from "react-hook-form";
 
 const Question = (props) => {
-    const { questionId, questionType, attributes, required, label } = props.options;
+    const { questionId, questionType, attributes, label } = props.options;
+    const { register, setValue, control, formState: { errors } } = useFormContext();
+    const isError = Boolean(errors?.[questionId]?.type)
+
     if (!props.options) {
         return null;
     }
 
     if (questionType === 'text') {
         return (
-            <Grid item>
+            <Box>
                 <TextField
+                    {...register(questionId, {
+                        required: "The field is required"
+                    })}
                     name={questionId}
                     label={label}
                     type='text'
+                    error={isError}
                     sx={{ width: '50%' }}
                     {...attributes}
                 />
-            </Grid>
+                {isError && <Box sx={{ color: 'red', mt: 1 }}>
+                    {errors[questionId].message}
+                </Box>}
+            </Box>
         )
     } else if (questionType === 'rating') {
         return (
-            <Grid item>
+            <Box>
                 <Typography component="legend">{label}</Typography>
-                <Rating
-                    name={questionId}
-                    sx={{ width: '50%' }}
-                    {...attributes}
+                <Controller
+                    name={"review"}
+                    control={control}
+                    rules={{ setValueAs: (v) => parseInt(v), required: "The field is required" }}
+                    render={({ field }) => <Rating
+                        onChange={(_, value) => field.onChange(parseInt(value))}
+                        sx={{ width: '50%' }}
+                    />
+                    }
                 />
-            </Grid>
+                {isError && <Box sx={{ color: 'red', mt: 1 }}>
+                    {errors[questionId].message}
+                </Box>}
+            </Box>
         )
     }
 }

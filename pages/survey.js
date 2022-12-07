@@ -1,33 +1,63 @@
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid';
-import TextField from "@mui/material/TextField";
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import { Fragment, useEffect, useState } from 'react';
+import { useForm, FormProvider } from 'react-hook-form';
+import { Grid, Button, Typography } from '@mui/material';
 import { Box, Container } from '@mui/system';
 import Question from './question';
 
 
 function Survey() {
+    const methods = useForm();
     const router = useRouter();
-    const [attributes, setAttributes] = useState();
+    const [data, setData] = useState();
+    const [errors, setErrors] = useState();
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        router.push('/preview')
+    const onSubmit = async (values) => {
+        const answers = Object.keys(values).map(key => (
+            {
+                questionId: key,
+                answer: values[key]
+            }
+        ))
+
+        const response = await fetch(`/api/v1/survey/${data.id}/answers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(answers)
+        });
+
+        if (response.ok) {
+            router.push('/preview')
+        }
+    }
+
+    const fetchSurveyData = async () => {
+        try {
+            const response = await fetch('/api/v1/survey');
+            const data = await response.json();
+            if (!response.ok) {
+                throw data.errors
+            }
+            setData(data)
+        } catch (error) {
+            setErrors(error)
+        }
     }
 
     useEffect(() => {
-        const fetchSurveyData = async () => {
-            await fetch('/api/v1/survey').then(response => response.json()).then(data => {
-                setAttributes(data?.attributes)
-            });
-        }
         fetchSurveyData();
     }, [])
 
-    if (!attributes) {
-        return null
+    if (!data && !errors) {
+        return <span>Loading...</span>
+    }
+
+    if (errors && Array.isArray(errors)) {
+        return <Fragment>
+            {errors.map((err, index) => <span key={index}>Error: {err.detail}</span>)}
+        </Fragment>
     }
 
     return (
@@ -45,36 +75,21 @@ function Survey() {
                     </Typography>
                 </Box>
             </Grid>
-            <form onSubmit={handleSubmit}>
-                <Grid container justify="center" direction="column" spacing={4}>
-                    <Grid item>
-                        <TextField
-                            id="title"
-                            name="title"
-                            label="Title"
-                            type="text"
-                            sx={{ width: '50%' }}
-                        />
+            <FormProvider {...methods}>
+                <form onSubmit={methods.handleSubmit(onSubmit)}>
+                    <Grid container justify="center" direction="column" spacing={4}>
+                        {data.attributes?.questions?.map(q => (
+                            <Grid item key={q.questionId}>
+                                <Question options={q} />
+                            </Grid>
+                        ))}
+                        <Grid item>
+                            <Button variant="contained" type="submit">Send feedback</Button>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <TextField
-                            id="description"
-                            name="description"
-                            label="Description"
-                            type="text"
-                            multiline
-                            rows={5}
-                            fullWidth
-                        />
-                    </Grid>
-                    {attributes?.questions?.map(q => (
-                        <Question options={q} key={q.questionId} />
-                    ))}
-                    <Grid item>
-                        <Button variant="contained" type="submit">Send feedback</Button>
-                    </Grid>
-                </Grid>
-            </form>
+                </form>
+            </FormProvider>
+
         </Container>
     );
 }
