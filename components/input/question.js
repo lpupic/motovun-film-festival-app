@@ -2,12 +2,12 @@ import { Rating, TextField, Typography } from "@mui/material"
 import { Box } from "@mui/system";
 import { Controller, useFormContext } from "react-hook-form";
 
-const Question = (props) => {
-    const { questionId, questionType, attributes, label } = props.options;
+const Question = ({ options }) => {
+    const { questionId, questionType, attributes, label } = options;
     const { register, control, formState: { errors } } = useFormContext();
     const isError = Boolean(errors?.[questionId]?.type)
 
-    if (!props.options) {
+    if (typeof options !== 'object' && !Object.keys(options).length !== 0) {
         return null;
     }
 
@@ -33,7 +33,7 @@ const Question = (props) => {
             <Box>
                 <Typography component="legend">{label}</Typography>
                 <Controller
-                    name={"review"}
+                    name={questionId}
                     control={control}
                     rules={{ setValueAs: (v) => parseInt(v), required: "The field is required" }}
                     render={({ field }) => <Rating

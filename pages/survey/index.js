@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Grid, Button, Typography, List, ListItem, ListItemText } from '@mui/material';
 import { Box, Container } from '@mui/system';
-import Question from './question';
+import Question from '../../components/input/question';
 
 
 function Survey() {
