@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router'
+import Router from 'next/router';
 import { useEffect, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Grid, Button, Typography, List, ListItem, ListItemText } from '@mui/material';
@@ -8,7 +8,6 @@ import Question from './question';
 
 function Survey() {
     const methods = useForm();
-    const router = useRouter();
     const [surveyData, setSurveyData] = useState();
     const [errors, setErrors] = useState();
 
@@ -41,7 +40,11 @@ function Survey() {
             });
             return
         }
-        router.push('/preview')
+       
+        Router.push({
+            pathname: '/preview',
+            query: { answers: JSON.stringify(answers) }
+        })
     }
 
     useEffect(() => {
